@@ -2,14 +2,14 @@
 -compile(export_all).
 
 worker(P) ->
-    fun () ->
+    % fun () ->
 	    Rand = rand:uniform(),
 	    if Rand < 0.5 ->
 		    io:format("WORKER: sucess! value = ~p~n", [100+P]);
 	       true ->
 		    io:format("WORKER: sucess! value = ~p~n", [P])
-	    end
-    end.
+	    end.
+    % end.
 
 server() ->
     spawn(fun master/0).
