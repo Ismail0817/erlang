@@ -1,4 +1,4 @@
--module(document_processor).
+-module(document_processor1).
 % -export([start/0, edit/2, edit/4, get/3, pending_operations/3]).
 -compile(export_all).
 
@@ -29,14 +29,16 @@ worker()->
 
 loop(Doc) -> 
     receive
-        {FromPid, {edit, StartLine, EndLine, Fun}} ->
+        {_FromPid, {edit, StartLine, EndLine, Fun}} ->
             P = spawn(fun worker/0),
             P ! {self(), StartLine, EndLine, Fun, Doc},
+            io:format("Absolute value: ~p~n", [self()]),
+            % loop(Doc);
             receive 
                 {ok, Modified} ->
-                    FromPid ! {ok},
+                    % FromPid ! {ok},
                     loop(Modified)
-                end;
+            end;
             % ModifiedDoc = lists:sublist(Doc, 1, (StartLine+1) -1 ) ++
             %               lists:map(Fun, lists:sublist(Doc, StartLine + 1, (EndLine+1) - (StartLine+1))) ++
             %               lists:sublist(Doc, EndLine + 1, length(Doc)),
@@ -50,6 +52,7 @@ loop(Doc) ->
             loop(Doc);
 
         {doc, Document} -> loop(Document);
+        % {modifycomplete, Modified} -> loop(Modified);
         {show, Pid} -> Pid ! Doc, loop(Doc)
     end.
 
