@@ -76,3 +76,28 @@ deadlock() ->
         deadlock()
     end).
 
+
+
+ordered(Fun, L)-> ordered(Fun, L, length(L), 1).
+
+ordered(_Fun, [], Length, _ListPos) -> gatherlist([], Length);
+ordered(Fun, [H | T], Length, ListPos)-> 
+    Pid = spawn(fun work/0),
+    Pid ! {work, self(), Fun, H, ListPos},
+    ordered(Fun, T, Length, ListPos +1).
+
+
+
+
+work()->
+    receive
+        {work, Pid, Fun, Payload, ListPos} -> 
+            Pid ! {result, ListPos, Fun(Payload)}
+    end.
+
+gatherlist(Res, 0) -> Res;
+gatherlist(Res, Length) ->
+    receive
+        {result, Length, Result} -> 
+            gatherlist([Result | Res], Length -1)
+    end. 
