@@ -20,6 +20,7 @@ start() ->
 worker()->
     receive
         {FromPid, StartLine, EndLine, Fun, Doc} ->
+            io:format("From Pid value: ~p~n", [FromPid]),
             ModifiedDoc = lists:sublist(Doc, 1, (StartLine+1) -1 ) ++
                           lists:map(Fun, lists:sublist(Doc, StartLine + 1, (EndLine+1) - (StartLine+1))) ++
                           lists:sublist(Doc, EndLine + 1, length(Doc)),
@@ -32,13 +33,13 @@ loop(Doc) ->
         {_FromPid, {edit, StartLine, EndLine, Fun}} ->
             P = spawn(fun worker/0),
             P ! {self(), StartLine, EndLine, Fun, Doc},
-            io:format("Absolute value: ~p~n", [self()]),
-            % loop(Doc);
-            receive 
-                {ok, Modified} ->
-                    % FromPid ! {ok},
-                    loop(Modified)
-            end;
+            io:format("Self Pid value: ~p~n", [self()]),
+            loop(Doc);
+            % receive 
+            %     {ok, Modified} ->
+            %         % FromPid ! {ok},
+            %         loop(Modified)
+            % end;
             % ModifiedDoc = lists:sublist(Doc, 1, (StartLine+1) -1 ) ++
             %               lists:map(Fun, lists:sublist(Doc, StartLine + 1, (EndLine+1) - (StartLine+1))) ++
             %               lists:sublist(Doc, EndLine + 1, length(Doc)),
@@ -52,7 +53,7 @@ loop(Doc) ->
             loop(Doc);
 
         {doc, Document} -> loop(Document);
-        % {modifycomplete, Modified} -> loop(Modified);
+        {ok, Modified} -> loop(Modified);
         {show, Pid} -> Pid ! Doc, loop(Doc)
     end.
 
@@ -63,11 +64,11 @@ edit(Doc) ->
     
 
 edit(Pid, StartLine, EndLine, Fun) ->
-    Pid ! {self(), {edit, StartLine, EndLine, Fun}},
-    receive
-        {ok} ->
-            ok
-    end.
+    Pid ! {self(), {edit, StartLine, EndLine, Fun}}.
+    % receive
+    %     {ok} ->
+    %         ok
+    % end.
 
 get(Pid, StartLine, EndLine) ->
     Pid ! {self(), {get, StartLine, EndLine}},

@@ -30,7 +30,7 @@ worker()->
 loop(Doc) -> 
     receive
         {FromPid, {edit, StartLine, EndLine, Fun}} ->
-            P = spawn(fun worker/0),
+            P = spawn_link(fun worker/0),
             P ! {self(), StartLine, EndLine, Fun, Doc},
             receive 
                 {ok, Modified} ->
@@ -49,13 +49,17 @@ loop(Doc) ->
             FromPid ! {ok, count_pending_operations(Doc)},
             loop(Doc);
 
-        {doc, Document} -> loop(Document);
+        {doc, Document} -> loop(Document++Doc);
         {show, Pid} -> Pid ! Doc, loop(Doc)
     end.
 
-edit(Doc) ->
-    Doc_list = string:split(Doc, "\n"),
-    loop ! {doc, Doc_list}.
+
+edit(Doc) -> edit(Doc,[]).
+edit([], Result) -> loop ! {doc, Result};
+edit(Doc, Result) ->
+    [H | T] = string:split(Doc, "\n"),
+    % loop ! {doc, H},
+    edit(T, H ++ Result).
     
     
 
